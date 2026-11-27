@@ -17,9 +17,24 @@ Built on the same stack as the PDF suite: Flask + gunicorn, a single vanilla HTM
 | Data | CSV, JSON, XML, YAML, XLSX, Markdown | CSV, JSON, XML, YAML, XLSX (to each other); Markdown to HTML or PDF | openpyxl, PyYAML, defusedxml, Markdown, PyMuPDF |
 | Archives | ZIP, TAR, TAR.GZ (.tgz), 7z | ZIP, TAR, TAR.GZ, 7z | zipfile, tarfile, py7zr |
 
-Extras: batch up to 20 files (results come back as a zip), combine several images into one PDF,
+Extras: batch up to 20 files with per-file progress (results come back as one zip), a history of recent
+conversions, combine several images into one PDF,
 image quality and resize, video resolution cap, audio bitrate. Animated GIF → WebP/GIF keeps the animation.
 Transparent images converted to JPG/PDF get a white background.
+
+### Batch upload, progress and history
+
+- Drag and drop (or choose) up to 20 files. The page uploads and converts them one request per file,
+  two at a time (one at a time for audio and video), so each file gets its own progress bar
+  (upload, then conversion) and the status line shows overall progress. A file that fails shows its
+  error and the rest carry on. **Cancel** stops the files that haven't finished.
+- When more than one file converts, the page bundles the results into one zip in the browser
+  (`static/zipwriter.js`, uncompressed, up to 4 GB) and offers **Download all (zip)**. Each file also has
+  its own **Download** link. A single file downloads as itself, as before.
+- The upload limit (`MAX_UPLOAD_MB`, default 500) applies to each request, so in a batch it is per file.
+  Combining images into one PDF still sends all the images in one request, so there the limit is for all of them.
+- **Recent conversions** lists the last 50 conversions (file, formats, size, success or error). It is kept in the
+  browser's `localStorage` only; no files are stored and nothing is sent to the server. **Clear history** empties it.
 
 ### Data and archive notes
 
@@ -72,11 +87,14 @@ Builds small fixtures (image, audio, video, docx, xlsx, pptx, pdf, md, html, csv
 every input through every target it offers, checking the output's file signature.
 `tests/test_data_archive.py` does the same for the Data and Archive converters (pure Python, no system
 tools needed) and checks round-trips, nested data, multi-sheet workbooks and unsafe archives.
+`tests/test_batch.py` covers the per-file requests the batch UI makes, the upload limits, and the browser
+zip writer (run under Node 18+, skipped if `node` isn't installed; the zips are checked with Python's `zipfile`).
 
 ## API
 
 - `GET /api/formats` – supported input extensions, their targets, and which tools are installed.
-  `formats` maps each extension to its primary converter; `categories` lists every converter with its own extensions and targets.
+  `formats` maps each extension to its primary converter; `categories` lists every converter with its own extensions and targets;
+  `limits` gives `max_upload_mb` and `max_files`.
 - `POST /api/convert` – multipart form: `files` (one or more), `target` (e.g. `mp3`), optional
   `category` (`image`, `audio`, `video`, `document`, `spreadsheet`, `presentation`, `pdf`, `data`, `archive`),
   `quality`, `max_size`, `max_height`, `audio_bitrate`, `combine_pdf`. Returns the converted file,
