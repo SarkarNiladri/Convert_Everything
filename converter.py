@@ -8,6 +8,12 @@ extensions. `convert_file` routes one file to the right engine:
 * video     -> ffmpeg
 * documents -> LibreOffice (office formats, PDF export), pandoc (Markdown,
                HTML, EPUB), PyMuPDF and pdf2docx (PDF input)
+* data      -> data_converter.py (CSV, JSON, XML, YAML, XLSX, Markdown)
+* archives  -> archive_converter.py (ZIP, TAR, TAR.GZ, 7z)
+
+An extension can belong to more than one converter (CSV is both a spreadsheet
+and a data file). REGISTRY keeps each extension's first ("primary") category;
+CATEGORIES lists every converter with its own extensions and targets.
 """
 import shutil
 import subprocess
@@ -20,6 +26,10 @@ from pathlib import Path
 
 import pymupdf
 from PIL import Image, ImageSequence, features
+
+import archive_converter
+import data_converter
+from errors import ConversionError
 
 try:
     from pillow_heif import register_heif_opener
@@ -34,10 +44,6 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 
 OFFICE_TIMEOUT = 180
 MEDIA_TIMEOUT = 900
-
-
-class ConversionError(Exception):
-    """A user-facing conversion problem (bad input, unsupported pair, tool failure)."""
 
 
 # ---------- Format registry ----------
@@ -73,15 +79,21 @@ LABELS = {
     "xlsx": "Excel (XLSX)", "xls": "Excel 97 (XLS)", "ods": "OpenDocument Sheet",
     "pptx": "PowerPoint (PPTX)", "ppt": "PowerPoint 97 (PPT)", "odp": "OpenDocument Slides",
     "epub": "EPUB e-book", "m4a": "M4A (AAC)", "aac": "AAC", "opus": "Opus",
+    "json": "JSON", "xml": "XML", "yaml": "YAML", "yml": "YAML",
+    "zip": "ZIP", "tar": "TAR", "tar.gz": "TAR.GZ (gzip)", "tgz": "TAR.GZ (gzip)", "7z": "7-Zip (7z)",
 }
 
 
 def _registry():
-    reg = {}
+    """Returns (REGISTRY, CATEGORIES). See the module docstring."""
+    reg, cats = {}, {}
 
     def add(exts, category, targets):
         for ext in exts:
-            reg[ext] = {"category": category, "targets": [t for t in targets if t != ext and not (ext == "jpeg" and t == "jpg") and not (ext == "tif" and t == "tiff")]}
+            outs = targets(ext) if callable(targets) else targets
+            outs = [t for t in outs if t != ext and not (ext == "jpeg" and t == "jpg") and not (ext == "tif" and t == "tiff")]
+            cats.setdefault(category, {})[ext] = outs
+            reg.setdefault(ext, {"category": category, "targets": outs})
 
     add(IMAGE_IN, "image", IMAGE_OUT)
     add(AUDIO_IN, "audio", AUDIO_OUT)
@@ -90,16 +102,40 @@ def _registry():
     add(SHEET_IN, "spreadsheet", SHEET_OUT)
     add(SLIDE_IN, "presentation", SLIDE_OUT)
     add(["pdf"], "pdf", PDF_OUT)
+    add(data_converter.DATA_IN, "data", data_converter.targets_for)
+    add(archive_converter.ARCHIVE_IN, "archive", archive_converter.targets_for)
     # Same-format "conversion" is still useful for video/audio re-encoding or
     # image resizing, but hiding it keeps the picker short and obvious.
-    return reg
+    return reg, cats
 
 
-REGISTRY = _registry()
+REGISTRY, CATEGORIES = _registry()
+
+COMPOUND_EXTS = ("tar.gz",)
 
 
 def ext_of(path) -> str:
+    name = Path(path).name.lower()
+    for compound in COMPOUND_EXTS:
+        if name.endswith("." + compound):
+            return compound
     return Path(path).suffix.lower().lstrip(".")
+
+
+def resolve(ext: str, target: str, category: str | None = None):
+    """Pick the converter for ext -> target: (category, targets), or (None, None).
+
+    With a category (the UI always sends one) only that converter is used.
+    Without one, the primary category wins unless only another converter
+    offers the target (e.g. CSV -> JSON goes to the data converter)."""
+    if category:
+        targets = CATEGORIES.get(category, {}).get(ext)
+        return (category, targets) if targets is not None else (None, None)
+    owners = [(cat, exts[ext]) for cat, exts in CATEGORIES.items() if ext in exts]
+    for cat, targets in owners:
+        if target in targets:
+            return cat, targets
+    return owners[0] if owners else (None, None)
 
 
 def label(ext: str) -> str:
@@ -123,7 +159,13 @@ def formats_payload() -> dict:
         tool = needs.get(info["category"])
         available = tools.get(tool, True) if tool else True
         out[ext] = {**info, "available": available}
-    return {"formats": out, "labels": {e: label(e) for e in set(REGISTRY) | {t for i in REGISTRY.values() for t in i["targets"]}}, "tools": tools}
+    categories = {}
+    for cat, exts in CATEGORIES.items():
+        tool = needs.get(cat)
+        available = tools.get(tool, True) if tool else True
+        categories[cat] = {ext: {"targets": targets, "available": available} for ext, targets in exts.items()}
+    every = set(REGISTRY) | {t for exts in CATEGORIES.values() for ts in exts.values() for t in ts}
+    return {"formats": out, "categories": categories, "labels": {e: label(e) for e in every}, "tools": tools}
 
 
 # ---------- Shared helpers (same conventions as the PDF suite) ----------
@@ -136,6 +178,7 @@ _MAGIC = {
     "bmp": [b"BM"],
     "docx": [b"PK"], "xlsx": [b"PK"], "pptx": [b"PK"],
     "odt": [b"PK"], "ods": [b"PK"], "odp": [b"PK"],
+    "zip": [b"PK"], "7z": [b"7z\xbc\xaf\x27\x1c"], "tar.gz": [b"\x1f\x8b"], "tgz": [b"\x1f\x8b"],
 }
 
 
@@ -465,7 +508,7 @@ def convert_pdf(src: Path, target: str, out_dir: Path) -> list[Path]:
 
 
 # ---------- Router ----------
-def convert_file(src: Path, target: str, out_dir: Path, options: dict | None = None) -> list[Path]:
+def convert_file(src: Path, target: str, out_dir: Path, options: dict | None = None, category: str | None = None) -> list[Path]:
     options = options or {}
     target = target.lower().lstrip(".")
     if target == "jpeg":
@@ -473,14 +516,15 @@ def convert_file(src: Path, target: str, out_dir: Path, options: dict | None = N
     if target == "tif":
         target = "tiff"
     ext = ext_of(src)
-    info = REGISTRY.get(ext)
-    if not info:
+    cat, targets = resolve(ext, target, category)
+    if cat is None:
+        if category and ext in REGISTRY:
+            raise ConversionError(f"{src.name}: .{ext} files don't belong in the {category} converter.")
         raise ConversionError(f"{src.name}: .{ext or '?'} files aren't supported yet.")
-    if target not in info["targets"]:
+    if target not in targets:
         raise ConversionError(f"{src.name}: can't convert {label(ext)} to {label(target)}.")
     validate_file(src)
 
-    cat = info["category"]
     if cat == "image":
         return convert_image(src, target, out_dir, quality=options.get("quality", 90), max_size=options.get("max_size"))
     if cat in ("audio", "video"):
@@ -491,6 +535,10 @@ def convert_file(src: Path, target: str, out_dir: Path, options: dict | None = N
         return convert_office(src, target, out_dir)
     if cat == "pdf":
         return convert_pdf(src, target, out_dir)
+    if cat == "data":
+        return data_converter.convert_data(src, target, out_dir)
+    if cat == "archive":
+        return archive_converter.convert_archive(src, target, out_dir)
     raise ConversionError("Unsupported file type.")
 
 

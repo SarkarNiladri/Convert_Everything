@@ -7,7 +7,7 @@ from flask import Flask, request, jsonify, send_file
 from dotenv import load_dotenv
 
 from converter import (
-    ConversionError, REGISTRY, UPLOAD_DIR, cleanup_old_jobs, convert_file,
+    CATEGORIES, ConversionError, REGISTRY, UPLOAD_DIR, cleanup_old_jobs, convert_file,
     ext_of, formats_payload, images_to_single_pdf, safe_name, zip_outputs,
 )
 
@@ -88,8 +88,7 @@ def convert():
         category = (request.form.get("category") or "").strip().lower()
         if category:
             for src in sources:
-                info = REGISTRY.get(ext_of(src))
-                if not info or info["category"] != category:
+                if ext_of(src) not in CATEGORIES.get(category, {}):
                     raise ConversionError(f"{src.name} isn't {'an' if category[0] in 'aeiou' else 'a'} {category} file. Use the matching converter tab.")
 
         all_images = all(REGISTRY.get(ext_of(s), {}).get("category") == "image" for s in sources)
@@ -98,7 +97,7 @@ def convert():
         else:
             outputs = []
             for src in sources:
-                outputs.extend(convert_file(src, target, out_dir, options))
+                outputs.extend(convert_file(src, target, out_dir, options, category=category or None))
 
         if len(outputs) == 1:
             result = outputs[0]
