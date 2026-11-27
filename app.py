@@ -31,8 +31,13 @@ def health():
 
 @app.get("/api/formats")
 def formats():
-    """Everything the UI needs to build the format picker."""
-    return jsonify(formats_payload())
+    """Everything the UI needs to build the format picker, plus the upload limits."""
+    payload = formats_payload()
+    payload["limits"] = {
+        "max_upload_mb": app.config["MAX_CONTENT_LENGTH"] // (1024 * 1024),
+        "max_files": MAX_FILES,
+    }
+    return jsonify(payload)
 
 
 def _int_option(name, default=None, lo=None, hi=None):

@@ -91,6 +91,17 @@
     .file .size { color: var(--muted); font-size: 12px; white-space: nowrap; }
     .file .x { border: none; background: #f1f5f9; color: #64748b; width: 26px; height: 26px; border-radius: 8px; cursor: pointer; font-size: 15px; line-height: 1; }
     .file .x:hover { background: #fee2e2; color: #b91c1c; }
+    .file { flex-wrap: wrap; }
+    .file .prog { flex-basis: 100%; display: flex; align-items: center; gap: 10px; font-size: 11.5px; color: var(--muted); min-width: 0; }
+    .file .prog .bar { flex: 1; margin-top: 0; height: 5px; min-width: 60px; }
+    .file .prog .st { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%; }
+    .file.ok .bar > div { background: #16a34a; }
+    .file.ok .st { color: #15803d; font-weight: 600; }
+    .file.err { border-color: #fecaca; background: #fffafa; }
+    .file.err .bar > div { background: #ef4444; }
+    .file.err .st { color: #b91c1c; white-space: normal; }
+    .file .dl { color: var(--accent); font-weight: 700; font-size: 12px; text-decoration: none; padding: 5px 9px; border-radius: 8px; background: var(--accent-soft); white-space: nowrap; }
+    .file .dl:hover { text-decoration: underline; }
 
     .formats { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
     .group { font-size: 12px; font-weight: 600; color: var(--muted); margin: 14px 0 8px; }
@@ -121,6 +132,9 @@
       display: flex; align-items: center; justify-content: center; gap: 10px; }
     .go:hover { transform: translateY(-1px); box-shadow: 0 18px 32px -10px var(--accent); }
     .go:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+    .cancel { display: none; margin-top: 10px; width: 100%; border: 1px solid var(--line); background: #fff; color: #475569; padding: 10px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .cancel.show { display: block; }
+    .cancel:hover { border-color: #fecaca; color: #b91c1c; background: #fef2f2; }
 
     .status { margin-top: 14px; border-radius: 12px; padding: 12px 14px; font-size: 13px; display: none; }
     .status.show { display: block; }
@@ -143,6 +157,22 @@
     .feature .fi { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: #eef2ff; color: var(--brand); font-size: 18px; flex-shrink: 0; }
     .feature b { font-size: 14px; }
     .feature p { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+    .history { margin-top: 22px; background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 18px 20px; }
+    .history-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .history-head h3 { font-size: 16px; letter-spacing: -.2px; }
+    .history-head span { color: #94a3b8; font-size: 12px; }
+    .history-head button { margin-left: auto; border: 1px solid var(--line); background: #fff; color: #64748b; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 9px; cursor: pointer; }
+    .history-head button:hover { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
+    .hlist { display: grid; gap: 6px; max-height: 320px; overflow: auto; }
+    .hitem { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 12px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 12px; font-size: 13px; }
+    .hitem .conv { font-size: 10px; font-weight: 800; letter-spacing: .4px; color: #475569; background: #f1f5f9; padding: 5px 8px; border-radius: 7px; white-space: nowrap; }
+    .hitem .hname { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hitem .hname small { display: block; font-weight: 400; color: var(--muted); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; }
+    .hitem .when { color: #94a3b8; font-size: 12px; white-space: nowrap; }
+    .hitem .res { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; color: #fff; background: #16a34a; }
+    .hitem.err .res { background: #ef4444; }
+    .hitem.err .hname small { color: #b91c1c; }
+    .hempty { color: #94a3b8; font-size: 13px; }
     .footer { text-align: center; color: #94a3b8; font-size: 12px; margin-top: 26px; }
 
     @media (max-width: 1000px) {
@@ -163,6 +193,14 @@
       .opt { grid-template-columns: 1fr; gap: 6px; }
       .hint { margin: -6px 0 0; }
       .features { grid-template-columns: 1fr; }
+      .history { padding: 16px; }
+      .hitem { grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; }
+      .hitem .when { grid-column: 2; grid-row: 2; margin-top: -4px; }
+      .hitem .res { grid-column: 3; grid-row: 1 / span 2; }
+      .file .prog .st { max-width: 50%; }
+      .done { flex-wrap: wrap; }
+      .done .what { flex-basis: calc(100% - 48px); }
+      .done a { flex-basis: 100%; justify-content: center; }
     }
   </style>
 </head>
@@ -205,6 +243,7 @@
           <div class="step step-gap"><span class="n">3</span> Options</div>
           <div id="opts"></div>
           <button class="go" id="go" type="button" disabled></button>
+          <button class="cancel" id="cancel" type="button">Cancel</button>
           <div class="status" id="status"></div>
           <div class="done" id="done">
             <div class="ok">✓</div>
@@ -215,14 +254,23 @@
       </div>
     </section>
 
+    <section class="history" id="history" aria-labelledby="historyTitle">
+      <div class="history-head">
+        <h3 id="historyTitle">Recent conversions</h3><span>Kept in this browser only. Files are not stored.</span>
+        <button type="button" id="clearHistory">Clear history</button>
+      </div>
+      <div class="hlist" id="historyList"></div>
+    </section>
+
     <div class="features">
-      <div class="feature"><div class="fi">⚡</div><div><b>Batch conversion</b><p>Up to 20 files at once. Several results come back as one zip.</p></div></div>
+      <div class="feature"><div class="fi">⚡</div><div><b>Batch conversion</b><p>Drop up to 20 files at once, watch each one's progress, and download every result as one zip.</p></div></div>
       <div class="feature"><div class="fi">🎯</div><div><b>Only valid formats</b><p>Each converter shows just the formats your files can actually become.</p></div></div>
       <div class="feature"><div class="fi">🔒</div><div><b>Private by default</b><p>Uploads are deleted from the server as soon as your download is sent.</p></div></div>
     </div>
     <p class="footer">Powered by ffmpeg, LibreOffice, pandoc, Pillow, PyMuPDF, openpyxl and py7zr.</p>
   </main>
 
+  <script src="/static/zipwriter.js"></script>
   <script>
     const SVG = {
       image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/>',
@@ -274,10 +322,12 @@
     const state = {};   // per converter: its own files and chosen format
     const opt = {};     // per converter: its own options
     TOOLS.forEach(t => {
-      state[t.id] = { files: [], target: null };
+      state[t.id] = { files: [], target: null, results: null };  // results: one entry per file while/after converting
       opt[t.id] = { quality: 90, resize: '', combine: true, resolution: '', bitrate: '192k' };
     });
-    let downloadUrl = null, busy = false;
+    let downloadUrl = null, busy = false, batch = null;
+    let MAX_UPLOAD_MB = 500;
+    const HISTORY_KEY = 'convert-anything:history', HISTORY_MAX = 50;
 
     const $ = id => document.getElementById(id);
     const extOf = n => { n = n.toLowerCase(); return n.endsWith('.tar.gz') ? 'tar.gz' : (n.includes('.') ? n.split('.').pop() : ''); };
@@ -298,6 +348,7 @@
     }
 
     function selectTool(id, push = true) {
+      clearResult();
       tool = TOOLS.find(t => t.id === id) || TOOLS[0];
       const root = document.documentElement.style;
       root.setProperty('--accent', tool.c1); root.setProperty('--accent-2', tool.c2);
@@ -314,7 +365,9 @@
     }
 
     function addFiles(list) {
+      if (busy) return;
       const s = S(), rejected = [];
+      clearResult();
       $('status').className = 'status';
       for (const f of list) {
         if (!infoFor(extOf(f.name))) { rejected.push(f.name); continue; }
@@ -342,14 +395,14 @@
 
     function render() {
       const s = S();
-      clearResult();
       $('drop').classList.toggle('compact', s.files.length > 0);
       $('dropTitle').textContent = s.files.length ? 'Add more files' : `Drop ${tool.name.toLowerCase()} files here`;
 
-      $('files').innerHTML = s.files.map((f, i) => `<div class="file"><span class="badge">${shortLabel(extOf(f.name))}</span>
-        <span class="name"></span><span class="size">${fmtSize(f.size)}</span><button class="x" data-i="${i}" title="Remove">×</button></div>`).join('');
+      $('files').innerHTML = s.files.map((f, i) => `<div class="file" id="row${i}"><span class="badge">${shortLabel(extOf(f.name))}</span>
+        <span class="name"></span><span class="size">${fmtSize(f.size)}</span>${busy ? '' : `<button class="x" data-i="${i}" title="Remove">×</button>`}</div>`).join('');
       // File names go in with textContent so an odd name can't inject HTML.
       [...$('files').querySelectorAll('.name')].forEach((el, i) => { el.textContent = s.files[i].name; el.title = s.files[i].name; });
+      s.files.forEach((_, i) => renderRow(i));
 
       const { all, ok } = targetsFor(s.files);
       if (s.target && !ok.has(s.target)) s.target = null;
@@ -363,6 +416,7 @@
       renderOptions();
       const go = $('go');
       go.disabled = busy || !s.files.length || !s.target;
+      $('cancel').classList.toggle('show', busy);
       go.innerHTML = busy ? 'Converting…' : !s.files.length ? 'Add files to start' : !s.target ? 'Pick a format'
         : `Convert ${s.files.length > 1 ? s.files.length + ' files ' : ''}to ${shortLabel(s.target)} <svg class="i" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>`;
     }
@@ -404,6 +458,11 @@
     function clearResult() {
       $('done').classList.remove('show');
       if (downloadUrl) { URL.revokeObjectURL(downloadUrl); downloadUrl = null; }
+      const s = S();
+      (s.results || []).forEach(r => { if (r.url) URL.revokeObjectURL(r.url); });
+      s.results = null;
+      $('files').querySelectorAll('.prog').forEach(el => el.remove());
+      $('files').querySelectorAll('.file').forEach(el => el.classList.remove('ok', 'err'));
     }
     function filenameFrom(xhr, fallback) {
       const cd = xhr.getResponseHeader('Content-Disposition') || '';
@@ -413,49 +472,212 @@
       return plain ? plain[1] : fallback;
     }
 
-    function convert() {
-      const s = S(), o = opt[tool.id], target = s.target, t = tool;
-      if (!target || !s.files.length || busy) return;
+    // ---------- Per-file progress ----------
+    // Uploading fills a file's bar to 70%; the server-side conversion is the last 30%.
+    const UPLOAD_SHARE = 70;
+    const STATE_TEXT = { queued: 'Waiting…', uploading: 'Uploading', converting: 'Converting…', done: 'Done', error: 'Failed', cancelled: 'Cancelled' };
+
+    function renderRow(i) {
+      const s = S(), r = (s.results || [])[i], row = $('row' + i);
+      if (!row) return;
+      row.querySelector('.prog')?.remove();
+      row.classList.toggle('ok', !!r && r.state === 'done');
+      row.classList.toggle('err', !!r && (r.state === 'error' || r.state === 'cancelled'));
+      if (!r) return;
+      const prog = document.createElement('div');
+      prog.className = 'prog';
+      const pct = r.state === 'done' || r.state === 'error' ? 100 : r.pct;
+      prog.innerHTML = `<div class="bar${r.state === 'converting' ? ' spin' : ''}"><div style="width:${pct}%"></div></div><span class="st"></span>`;
+      const st = prog.querySelector('.st');
+      st.textContent = r.state === 'uploading' ? `Uploading ${Math.round(r.pct / UPLOAD_SHARE * 100)}%`
+        : r.state === 'done' ? `Done · ${fmtSize(r.blob.size)}`
+        : r.state === 'error' ? r.error : STATE_TEXT[r.state];
+      if (r.state === 'error') st.title = r.error;
+      if (r.state === 'done') {
+        if (!r.url) r.url = URL.createObjectURL(r.blob);
+        const a = document.createElement('a');
+        a.className = 'dl'; a.href = r.url; a.download = r.name; a.title = r.name; a.textContent = 'Download';
+        prog.appendChild(a);
+      }
+      row.appendChild(prog);
+    }
+
+    function overall() {
+      const rs = S().results || [];
+      if (!rs.length) return 0;
+      return Math.round(rs.reduce((n, r) => n + (['done', 'error', 'cancelled'].includes(r.state) ? 100 : r.pct), 0) / rs.length);
+    }
+    function showOverall() {
+      const rs = S().results || [], finished = rs.filter(r => ['done', 'error'].includes(r.state)).length;
+      const video = batch && batch.tool.id === 'video' ? ' Videos can take a few minutes.' : '';
+      const what = rs.length > 1 ? `Converting ${rs.length} files to ${shortLabel(batch.target)} · ${finished} of ${rs.length} finished` : `Converting to ${shortLabel(batch.target)}`;
+      const pct = overall();
+      status(`${what} · ${pct}%${video}`, 'work', pct);
+    }
+
+    // POST files to /api/convert. Resolves to { blob, name } or rejects with a user-facing message.
+    function send(files, onUpload, onConverting) {
+      const o = opt[batch.tool.id];
       const form = new FormData();
-      s.files.forEach(f => form.append('files', f, f.name));
-      form.append('category', t.id);
-      form.append('target', target);
+      files.forEach(f => form.append('files', f, f.name));
+      form.append('category', batch.tool.id);
+      form.append('target', batch.target);
       form.append('quality', o.quality);
       form.append('max_size', o.resize);
       form.append('max_height', o.resolution);
       form.append('audio_bitrate', o.bitrate);
       form.append('combine_pdf', o.combine ? 'true' : 'false');
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        batch.xhrs.add(xhr);
+        xhr.open('POST', '/api/convert');
+        xhr.responseType = 'blob';
+        xhr.upload.onprogress = e => { if (e.lengthComputable && e.loaded < e.total) onUpload(e.loaded / e.total); };
+        xhr.upload.onload = () => onConverting();
+        xhr.onload = async () => {
+          batch.xhrs.delete(xhr);
+          if (xhr.status !== 200) {
+            let msg = `Conversion failed (HTTP ${xhr.status}).`;
+            try { msg = JSON.parse(await xhr.response.text()).error || msg; } catch (_) {}
+            return reject(new Error(msg));
+          }
+          resolve({ blob: xhr.response, name: filenameFrom(xhr, `converted.${batch.target}`) });
+        };
+        xhr.onerror = () => { batch.xhrs.delete(xhr); reject(new Error('Network error. Check your connection and try again.')); };
+        xhr.onabort = () => { batch.xhrs.delete(xhr); reject(new Error('Cancelled')); };
+        xhr.send(form);
+      });
+    }
 
-      busy = true; render();
-      const working = `Converting to ${shortLabel(target)}…${t.id === 'video' ? ' Videos can take a few minutes.' : ''}`;
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/api/convert');
-      xhr.responseType = 'blob';
-      xhr.upload.onprogress = e => {
-        if (!e.lengthComputable) return;
-        const pct = Math.round(e.loaded / e.total * 100);
-        pct < 100 ? status(`Uploading… ${pct}%`, 'work', pct) : status(working, 'work', -1);
-      };
-      xhr.upload.onload = () => status(working, 'work', -1);
-      xhr.onload = async () => {
-        busy = false; render();
-        if (xhr.status !== 200) {
-          let msg = `Conversion failed (HTTP ${xhr.status}).`;
-          try { msg = JSON.parse(await xhr.response.text()).error || msg; } catch (_) {}
-          status(msg, 'error'); return;
+    async function convert() {
+      const s = S(), o = opt[tool.id], target = s.target, t = tool;
+      if (!target || !s.files.length || busy) return;
+      clearResult();
+      const files = s.files.slice();
+      const combine = t.options.includes('combine') && target === 'pdf' && o.combine && files.length > 1;
+      const limit = MAX_UPLOAD_MB * 1024 * 1024;
+      // Each file is its own upload, so the size limit applies per file (all of them together when combining).
+      if (combine && files.reduce((n, f) => n + f.size, 0) > limit) {
+        return status(`Together these images are over the ${MAX_UPLOAD_MB} MB limit. Remove some, or turn off "Put all images into one PDF".`, 'error');
+      }
+      const big = files.filter(f => f.size > limit).map(f => f.name);
+      if (big.length) return status(`${big.join(', ')} ${big.length > 1 ? 'are' : 'is'} over the ${MAX_UPLOAD_MB} MB limit per file.`, 'error');
+
+      batch = { tool: t, target, xhrs: new Set(), cancelled: false };
+      busy = true;
+      s.results = combine ? null : files.map(() => ({ state: 'queued', pct: 0 }));
+      render();
+
+      if (combine) {
+        status(`Uploading… 0%`, 'work', 0);
+        try {
+          const res = await send(files,
+            f => status(`Uploading… ${Math.round(f * 100)}%`, 'work', Math.round(f * 100)),
+            () => status(`Combining ${files.length} images into one PDF…`, 'work', -1));
+          addHistory({ tool: t.id, name: `${files.length} images combined`, size: files.reduce((n, f) => n + f.size, 0), target, out: res.name, outSize: res.blob.size, ok: true });
+          finish([res], files.length);
+        } catch (e) {
+          if (!batch.cancelled) addHistory({ tool: t.id, name: `${files.length} images combined`, target, ok: false, error: e.message });
+          finish([], files.length, e.message);
         }
-        $('status').className = 'status';
-        const name = filenameFrom(xhr, `converted.${target}`);
-        downloadUrl = URL.createObjectURL(xhr.response);
-        $('doneName').textContent = name;
-        $('doneMeta').textContent = `${fmtSize(xhr.response.size)} · your download has started`;
-        const a = $('doneLink'); a.href = downloadUrl; a.download = name;
-        $('done').classList.add('show');
-        a.click();
+        return;
+      }
+
+      // Convert one file per request, a couple at a time (one at a time for heavy audio/video work).
+      showOverall();
+      let next = 0;
+      const runOne = async i => {
+        const r = s.results[i], f = files[i];
+        r.state = 'uploading'; renderRow(i); showOverall();
+        try {
+          const res = await send([f],
+            frac => { r.pct = Math.round(frac * UPLOAD_SHARE); renderRow(i); showOverall(); },
+            () => { r.state = 'converting'; r.pct = UPLOAD_SHARE; renderRow(i); showOverall(); });
+          Object.assign(r, { state: 'done', pct: 100, blob: res.blob, name: res.name });
+          addHistory({ tool: t.id, name: f.name, size: f.size, target, out: res.name, outSize: res.blob.size, ok: true });
+        } catch (e) {
+          Object.assign(r, { state: batch.cancelled ? 'cancelled' : 'error', error: e.message });
+          if (!batch.cancelled) addHistory({ tool: t.id, name: f.name, size: f.size, target, ok: false, error: e.message });
+        }
+        renderRow(i);
+        if (!batch.cancelled) showOverall();
       };
-      xhr.onerror = () => { busy = false; render(); status('Network error. Check your connection and try again.', 'error'); };
-      status('Uploading… 0%', 'work', 0);
-      xhr.send(form);
+      const worker = async () => { while (!batch.cancelled && next < files.length) await runOne(next++); };
+      const parallel = ['audio', 'video'].includes(t.id) ? 1 : 2;
+      await Promise.all(Array.from({ length: Math.min(parallel, files.length) }, worker));
+      s.results.forEach((r, i) => { if (r.state === 'queued') { r.state = 'cancelled'; renderRow(i); } });
+
+      const ok = s.results.filter(r => r.state === 'done');
+      const firstError = (s.results.find(r => r.state === 'error') || {}).error;
+      finish(ok.map(r => ({ blob: r.blob, name: r.name })), files.length, firstError);
+    }
+
+    // Show the download: the file itself when there is one result, otherwise a zip of all results.
+    async function finish(outputs, total, error) {
+      const t = batch.tool, target = batch.target, cancelled = batch.cancelled;
+      const failed = total - outputs.length;
+      let result = outputs[0];
+      if (outputs.length > 1) {
+        status(`Packing ${outputs.length} files into one zip…`, 'work', -1);
+        try {
+          const blob = await ZipWriter.makeZip(outputs.map(o => ({ name: o.name, blob: o.blob })));
+          result = { blob, name: `converted_${target.replace('.', '_')}.zip` };
+        } catch (e) {
+          busy = false; batch = null; render();
+          return status(`${e.message}`, 'error');
+        }
+      }
+      busy = false; batch = null; render();
+      if (!result) {
+        return status(cancelled ? 'Conversion cancelled.' : total > 1 ? `None of the ${total} files could be converted. ${error || ''}`.trim() : (error || 'Conversion failed.'), 'error');
+      }
+      if (failed) status(cancelled ? `Cancelled. ${outputs.length} of ${total} files were converted.` : `${failed} of ${total} files could not be converted. The rest are ready below.`, 'error');
+      else $('status').className = 'status';
+      downloadUrl = URL.createObjectURL(result.blob);
+      $('doneName').textContent = result.name;
+      $('doneMeta').textContent = `${outputs.length > 1 ? outputs.length + ' files · ' : ''}${fmtSize(result.blob.size)}${cancelled ? '' : ' · your download has started'}`;
+      const a = $('doneLink'); a.href = downloadUrl; a.download = result.name;
+      a.lastChild.textContent = outputs.length > 1 ? ' Download all (zip)' : ' Download';
+      $('done').classList.add('show');
+      if (!cancelled) a.click();
+    }
+
+    function cancel() {
+      if (!batch) return;
+      batch.cancelled = true;
+      [...batch.xhrs].forEach(x => x.abort());
+      status('Cancelling…', 'work', -1);
+    }
+
+    // ---------- History (this browser only) ----------
+    function loadHistory() {
+      try { const h = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); return Array.isArray(h) ? h : []; }
+      catch (_) { return []; }
+    }
+    function saveHistory(list) {
+      try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, HISTORY_MAX))); } catch (_) {}  // private mode or full storage
+    }
+    function addHistory(entry) {
+      saveHistory([{ at: Date.now(), ...entry }, ...loadHistory()]);
+      renderHistory();
+    }
+    function renderHistory() {
+      const list = loadHistory(), el = $('historyList');
+      $('clearHistory').style.display = list.length ? '' : 'none';
+      if (!list.length) { el.innerHTML = '<p class="hempty">Files you convert will be listed here.</p>'; return; }
+      el.innerHTML = list.map(h => `<div class="hitem${h.ok ? '' : ' err'}"><span class="conv"></span><div class="hname"><span></span><small></small></div><span class="when"></span><span class="res">${h.ok ? '✓' : '✕'}</span></div>`).join('');
+      // Everything from storage goes in as text, never as HTML.
+      [...el.children].forEach((row, i) => {
+        const h = list[i], from = extOf(String(h.name || ''));
+        row.querySelector('.conv').textContent = `${from && !/ images combined$/.test(h.name) ? shortLabel(from) : (TOOLS.find(x => x.id === h.tool) || {}).name || ''} → ${shortLabel(String(h.target || ''))}`;
+        row.querySelector('.hname span').textContent = h.name || '';
+        row.querySelector('.hname').title = h.name || '';
+        row.querySelector('small').textContent = h.ok ? `${h.out || ''}${h.outSize != null ? ' · ' + fmtSize(h.outSize) : ''}` : (h.error || 'Failed');
+        const d = new Date(h.at);
+        row.querySelector('.when').textContent = isNaN(d) ? '' : d.toDateString() === new Date().toDateString()
+          ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        row.querySelector('.when').title = isNaN(d) ? '' : d.toLocaleString();
+      });
     }
 
     // ---------- Events ----------
@@ -470,19 +692,24 @@
     drop.addEventListener('drop', e => addFiles(e.dataTransfer.files));
     window.addEventListener('dragover', e => e.preventDefault());
     window.addEventListener('drop', e => e.preventDefault());
-    $('files').addEventListener('click', e => { const b = e.target.closest('.x'); if (b && !busy) { S().files.splice(+b.dataset.i, 1); $('status').className = 'status'; render(); } });
-    $('targets').addEventListener('click', e => { const b = e.target.closest('.fmt'); if (b && !b.disabled && !busy) { S().target = b.dataset.t; render(); } });
+    $('files').addEventListener('click', e => { const b = e.target.closest('.x'); if (b && !busy) { clearResult(); S().files.splice(+b.dataset.i, 1); $('status').className = 'status'; render(); } });
+    $('targets').addEventListener('click', e => { const b = e.target.closest('.fmt'); if (b && !b.disabled && !busy) { clearResult(); S().target = b.dataset.t; render(); } });
     $('opts').addEventListener('input', e => {
       const k = e.target.dataset.k; if (!k) return;
       opt[tool.id][k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
       if (k === 'quality') e.target.nextElementSibling.textContent = e.target.value;
     });
     $('go').addEventListener('click', convert);
+    $('cancel').addEventListener('click', cancel);
+    $('clearHistory').addEventListener('click', () => { saveHistory([]); renderHistory(); });
+    window.addEventListener('storage', e => { if (e.key === HISTORY_KEY) renderHistory(); });
+    renderHistory();
     window.addEventListener('hashchange', () => { if (!busy) selectTool(location.hash.slice(1), false); });
 
     fetch('/api/formats').then(r => r.json()).then(d => {
       for (const [cat, exts] of Object.entries(d.categories)) CATS[cat] = Object.fromEntries(Object.entries(exts).filter(([, v]) => v.available));
       LABELS = d.labels;
+      if (d.limits) MAX_UPLOAD_MB = d.limits.max_upload_mb;
       selectTool(location.hash.slice(1) || 'image', false);
     }).catch(() => status('Could not reach the server.', 'error'));
   </script>
