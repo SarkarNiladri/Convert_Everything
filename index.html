@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Convert Anything</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%234f46e5%22/%3E%3Ctext x=%2216%22 y=%2223%22 font-size=%2220%22 text-anchor=%22middle%22 fill=%22white%22%3E%E2%87%84%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0f172a; --muted: #64748b; --line: #e2e8f0; --bg: #f5f7fb;
+      --brand: #4f46e5;
+      --accent: #4f46e5; --accent-soft: #eef2ff; --accent-2: #7c3aed;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    button { font-family: inherit; }
+    svg.i { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+    /* ---------- Hero ---------- */
+    .hero { position: relative; overflow: hidden; color: #fff; padding: 0 24px 120px;
+      background: radial-gradient(1200px 400px at 10% -10%, rgba(168,85,247,.55), transparent 60%),
+                  radial-gradient(900px 400px at 100% 0%, rgba(236,72,153,.35), transparent 60%),
+                  linear-gradient(135deg, #312e81 0%, #4f46e5 55%, #6d28d9 100%); }
+    .hero::after { content: ''; position: absolute; inset: 0; pointer-events: none;
+      background-image: radial-gradient(rgba(255,255,255,.12) 1px, transparent 1px); background-size: 22px 22px;
+      -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.6), transparent 85%); mask-image: linear-gradient(to bottom, rgba(0,0,0,.6), transparent 85%); }
+    .nav { max-width: 1120px; margin: 0 auto; height: 72px; display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; letter-spacing: -.4px; }
+    .brand-icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; font-size: 18px;
+      background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28); }
+    .nav .pill { margin-left: auto; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px;
+      background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); display: flex; gap: 6px; align-items: center; }
+    .hero-text { max-width: 760px; margin: 34px auto 0; text-align: center; position: relative; z-index: 1; }
+    .hero-text h1 { font-size: 44px; line-height: 1.1; font-weight: 800; letter-spacing: -1.2px; }
+    .hero-text h1 span { background: linear-gradient(90deg, #fde68a, #f9a8d4); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero-text p { margin-top: 14px; font-size: 17px; color: rgba(255,255,255,.82); }
+
+    .wrap { max-width: 1120px; margin: -88px auto 0; padding: 0 20px 60px; position: relative; z-index: 2; }
+
+    /* ---------- Converter picker ---------- */
+    .tools { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px; }
+    .tool { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px 14px 14px; text-align: left; cursor: pointer; color: var(--ink);
+      box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 8px 24px rgba(15,23,42,.06); transition: transform .18s, box-shadow .18s, border-color .18s; }
+    .tool:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(15,23,42,.12); }
+    .tool .ico { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; font-size: 21px; color: #fff; margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--c1), var(--c2)); box-shadow: 0 6px 16px -4px var(--c1); }
+    .tool strong { display: block; font-size: 15px; font-weight: 700; }
+    .tool small { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tool.active { border-color: var(--c1); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c1) 22%, transparent), 0 14px 34px rgba(15,23,42,.12); }
+
+    /* ---------- Converter panel ---------- */
+    .panel { margin-top: 22px; background: #fff; border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 20px 50px -20px rgba(15,23,42,.18); overflow: hidden; }
+    .panel-head { display: flex; align-items: center; gap: 14px; padding: 22px 26px; border-bottom: 1px solid var(--line);
+      background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 9%, #fff), #fff 70%); }
+    .panel-head .ico { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; font-size: 24px; color: #fff;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 8px 20px -6px var(--accent); }
+    .panel-head h2 { font-size: 20px; letter-spacing: -.3px; }
+    .panel-head p { color: var(--muted); font-size: 13px; margin-top: 2px; }
+    .panel-body { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
+    .col { padding: 24px 26px; min-width: 0; }
+    .col + .col { border-left: 1px solid var(--line); background: #fcfcfe; }
+    .step { display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 12px; text-transform: uppercase; letter-spacing: .6px; }
+    .step .n { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; color: #fff; background: var(--accent); }
+    .step-gap { margin-top: 24px; }
+
+    .drop { position: relative; border: 2px dashed color-mix(in srgb, var(--accent) 35%, #cbd5e1); border-radius: 18px; padding: 30px 18px; text-align: center; cursor: pointer;
+      background: radial-gradient(400px 160px at 50% 0%, color-mix(in srgb, var(--accent) 9%, #fff), #fafbff); transition: all .2s; outline: none; }
+    .drop:hover, .drop:focus-visible, .drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, #fff); }
+    .drop.over { transform: scale(1.01); }
+    .drop .big { width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 18px; display: grid; place-items: center; font-size: 30px; color: var(--accent);
+      background: #fff; box-shadow: 0 10px 25px -8px color-mix(in srgb, var(--accent) 60%, transparent); }
+    .drop h3 { font-size: 17px; font-weight: 700; }
+    .drop p { color: var(--muted); font-size: 13px; margin: 4px 0 14px; }
+    .drop .choose { display: inline-flex; align-items: center; gap: 8px; border: none; color: #fff; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 8px 18px -6px var(--accent); }
+    .drop .accepts { margin-top: 14px; font-size: 11px; color: #94a3b8; letter-spacing: .3px; }
+    .drop.compact { padding: 14px; display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .drop.compact .big, .drop.compact p, .drop.compact .accepts { display: none; }
+    .drop.compact h3 { font-size: 14px; }
+    .drop.compact .choose { padding: 7px 14px; font-size: 13px; }
+    input[type=file] { display: none; }
+
+    .files { margin-top: 12px; display: grid; gap: 8px; max-height: 300px; overflow: auto; }
+    .file { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: #fff; border: 1px solid var(--line); border-radius: 12px; font-size: 13px; animation: pop .2s ease; }
+    @keyframes pop { from { opacity: 0; transform: translateY(4px); } }
+    .file .badge { min-width: 44px; height: 32px; padding: 0 6px; border-radius: 8px; display: grid; place-items: center; font-size: 10px; font-weight: 800; letter-spacing: .4px; color: var(--accent); background: var(--accent-soft); text-transform: uppercase; }
+    .file .name { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file .size { color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .file .x { border: none; background: #f1f5f9; color: #64748b; width: 26px; height: 26px; border-radius: 8px; cursor: pointer; font-size: 15px; line-height: 1; }
+    .file .x:hover { background: #fee2e2; color: #b91c1c; }
+
+    .formats { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+    .group { font-size: 12px; font-weight: 600; color: var(--muted); margin: 14px 0 8px; }
+    .group:first-child { margin-top: 0; }
+    .fmt { border: 1.5px solid var(--line); background: #fff; border-radius: 12px; padding: 10px 6px; cursor: pointer; text-align: center; transition: all .15s; }
+    .fmt b { display: block; font-size: 14px; font-weight: 800; letter-spacing: .3px; color: #1e293b; }
+    .fmt span { display: block; font-size: 10.5px; color: #94a3b8; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fmt:hover { border-color: color-mix(in srgb, var(--accent) 50%, #e2e8f0); transform: translateY(-1px); }
+    .fmt.active { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+    .fmt.active b { color: var(--accent); }
+    .fmt:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+
+    .opts { display: grid; gap: 14px; padding: 16px; border-radius: 14px; background: #fff; border: 1px solid var(--line); }
+    .opt { display: grid; grid-template-columns: 120px 1fr; align-items: center; gap: 12px; font-size: 13px; }
+    .opt > label { font-weight: 600; color: #334155; }
+    .opt select { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; font: inherit; font-size: 13px; background: #fff; }
+    .opt select:focus { outline: 2px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+    .range { display: flex; align-items: center; gap: 10px; }
+    .range input { flex: 1; accent-color: var(--accent); }
+    .range output { min-width: 34px; font-weight: 700; color: var(--accent); }
+    .toggle { display: flex; align-items: center; gap: 10px; color: #475569; font-weight: 500 !important; }
+    .toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+    .hint { color: #94a3b8; font-size: 11.5px; margin: -8px 0 0 132px; }
+    .no-opts { color: #94a3b8; font-size: 13px; }
+
+    .go { margin-top: 24px; width: 100%; border: none; color: #fff; padding: 15px 20px; border-radius: 14px; font-size: 15px; font-weight: 800; cursor: pointer; letter-spacing: .2px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 14px 28px -10px var(--accent); transition: transform .15s, box-shadow .15s, opacity .15s;
+      display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .go:hover { transform: translateY(-1px); box-shadow: 0 18px 32px -10px var(--accent); }
+    .go:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .status { margin-top: 14px; border-radius: 12px; padding: 12px 14px; font-size: 13px; display: none; }
+    .status.show { display: block; }
+    .status.work { background: var(--accent-soft); color: #334155; }
+    .status.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .bar { height: 6px; background: rgba(15,23,42,.08); border-radius: 999px; overflow: hidden; margin-top: 8px; }
+    .bar > div { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 999px; transition: width .2s; }
+    .bar.spin > div { width: 35% !important; animation: slide 1.1s ease-in-out infinite; }
+    @keyframes slide { from { margin-left: -35%; } to { margin-left: 100%; } }
+    .done { display: none; margin-top: 14px; border-radius: 14px; padding: 14px; background: #f0fdf4; border: 1px solid #bbf7d0; align-items: center; gap: 12px; }
+    .done.show { display: flex; }
+    .done .ok { width: 36px; height: 36px; border-radius: 50%; background: #16a34a; color: #fff; display: grid; place-items: center; font-size: 18px; flex-shrink: 0; }
+    .done .what { flex: 1; min-width: 0; font-size: 13px; color: #166534; }
+    .done .what strong { display: block; color: #14532d; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .done a { background: #16a34a; color: #fff; text-decoration: none; padding: 9px 16px; border-radius: 10px; font-weight: 700; font-size: 13px; display: flex; gap: 6px; align-items: center; }
+    .done a:hover { background: #15803d; }
+
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 26px; }
+    .feature { display: flex; gap: 12px; align-items: flex-start; padding: 16px; background: #fff; border: 1px solid var(--line); border-radius: 16px; }
+    .feature .fi { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: #eef2ff; color: var(--brand); font-size: 18px; flex-shrink: 0; }
+    .feature b { font-size: 14px; }
+    .feature p { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+    .footer { text-align: center; color: #94a3b8; font-size: 12px; margin-top: 26px; }
+
+    @media (max-width: 1000px) {
+      .tools { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+    @media (max-width: 760px) {
+      .hero { padding: 0 16px 104px; }
+      .hero-text h1 { font-size: 30px; }
+      .hero-text p { font-size: 15px; }
+      .nav .pill { display: none; }
+      .wrap { padding: 0 12px 40px; margin-top: -80px; }
+      .tools { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 4px 10px; margin: 0 -4px; }
+      .tool { min-width: 128px; scroll-snap-align: start; padding: 12px; }
+      .tool .ico { width: 36px; height: 36px; font-size: 18px; margin-bottom: 8px; }
+      .panel-body { grid-template-columns: 1fr; }
+      .col + .col { border-left: none; border-top: 1px solid var(--line); }
+      .col, .panel-head { padding: 18px; }
+      .opt { grid-template-columns: 1fr; gap: 6px; }
+      .hint { margin: -6px 0 0; }
+      .features { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <nav class="nav">
+      <div class="brand"><span class="brand-icon">⇄</span> Convert Anything</div>
+      <span class="pill"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Files deleted right after conversion</span>
+    </nav>
+    <div class="hero-text">
+      <h1>Convert any file, <span>in seconds</span></h1>
+      <p>Images, audio, video, documents, spreadsheets, slides and PDFs. Pick a converter, drop your files, choose a format.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="tools" id="tools" role="tablist"></div>
+
+    <section class="panel" id="panel">
+      <div class="panel-head">
+        <div class="ico" id="pIcon"></div>
+        <div><h2 id="pTitle"></h2><p id="pDesc"></p></div>
+      </div>
+      <div class="panel-body">
+        <div class="col">
+          <div class="step"><span class="n">1</span> Upload</div>
+          <div class="drop" id="drop" tabindex="0">
+            <div class="big" id="dropIcon"></div>
+            <h3 id="dropTitle"></h3>
+            <p>Drag and drop here, or</p>
+            <button class="choose" type="button" id="chooseBtn"><svg class="i" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg> Choose files</button>
+            <div class="accepts" id="accepts"></div>
+            <input type="file" id="fileInput" multiple>
+          </div>
+          <div class="files" id="files"></div>
+        </div>
+        <div class="col">
+          <div class="step"><span class="n">2</span> Convert to</div>
+          <div id="targets"></div>
+          <div class="step step-gap"><span class="n">3</span> Options</div>
+          <div id="opts"></div>
+          <button class="go" id="go" type="button" disabled></button>
+          <div class="status" id="status"></div>
+          <div class="done" id="done">
+            <div class="ok">✓</div>
+            <div class="what"><strong id="doneName"></strong><span id="doneMeta"></span></div>
+            <a id="doneLink"><svg class="i" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg> Download</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="features">
+      <div class="feature"><div class="fi">⚡</div><div><b>Batch conversion</b><p>Up to 20 files at once. Several results come back as one zip.</p></div></div>
+      <div class="feature"><div class="fi">🎯</div><div><b>Only valid formats</b><p>Each converter shows just the formats your files can actually become.</p></div></div>
+      <div class="feature"><div class="fi">🔒</div><div><b>Private by default</b><p>Uploads are deleted from the server as soon as your download is sent.</p></div></div>
+    </div>
+    <p class="footer">Powered by ffmpeg, LibreOffice, pandoc, Pillow and PyMuPDF.</p>
+  </main>
+
+  <script>
+    const SVG = {
+      image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/>',
+      audio: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+      video: '<path d="m16 13 5.22 3.48a.5.5 0 0 0 .78-.42V7.87a.5.5 0 0 0-.75-.43L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/>',
+      document: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',
+      spreadsheet: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/>',
+      presentation: '<path d="M2 3h20"/><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"/><path d="m7 21 5-5 5 5"/>',
+      pdf: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 18v-5h1.5a1.5 1.5 0 0 1 0 3H8"/><path d="M14 13v5"/><path d="M14 13h2.5"/>',
+    };
+    const icon = k => `<svg class="i" viewBox="0 0 24 24">${SVG[k]}</svg>`;
+
+    // One converter per file type, each with its own colours, upload area and options.
+    const TOOLS = [
+      { id: 'image', name: 'Image', title: 'Image converter', desc: 'Convert photos and graphics, resize them, or turn them into a PDF.', c1: '#ec4899', c2: '#f97316', options: ['quality', 'resize', 'combine'] },
+      { id: 'audio', name: 'Audio', title: 'Audio converter', desc: 'Switch between MP3, WAV, FLAC and more, at the quality you choose.', c1: '#f59e0b', c2: '#ef4444', options: ['bitrate'] },
+      { id: 'video', name: 'Video', title: 'Video converter', desc: 'Change video formats, shrink resolution, make GIFs or pull out the audio.', c1: '#ef4444', c2: '#a855f7', options: ['resolution', 'bitrate'] },
+      { id: 'document', name: 'Document', title: 'Document converter', desc: 'Word, OpenDocument, RTF, Markdown, HTML and text, to PDF, EPUB and more.', c1: '#3b82f6', c2: '#6366f1', options: [] },
+      { id: 'spreadsheet', name: 'Spreadsheet', title: 'Spreadsheet converter', desc: 'Excel, OpenDocument and CSV, including spreadsheet to PDF.', c1: '#10b981', c2: '#0ea5e9', options: [] },
+      { id: 'presentation', name: 'Slides', title: 'Slides converter', desc: 'PowerPoint and OpenDocument slides to PDF or one image per slide.', c1: '#f97316', c2: '#eab308', options: [] },
+      { id: 'pdf', name: 'PDF', title: 'PDF converter', desc: 'Turn PDFs into editable Word files, plain text or page images.', c1: '#e11d48', c2: '#7c3aed', options: [] },
+    ];
+    const AUDIO_TARGETS = new Set(['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac', 'opus']);
+    const LOSSLESS = new Set(['wav', 'flac']);
+    const MAX_FILES = 20;
+    const DESC = {
+      png: 'Lossless', jpg: 'Photos', webp: 'Small, for web', avif: 'Smallest', gif: 'Animation', bmp: 'Bitmap', tiff: 'Print', ico: 'Favicon', pdf: 'Document',
+      mp3: 'Plays anywhere', wav: 'Uncompressed', ogg: 'Open format', flac: 'Lossless', m4a: 'Apple / AAC', aac: 'Raw AAC', opus: 'Best for voice',
+      mp4: 'Plays anywhere', webm: 'For web', mov: 'Apple', mkv: 'Matroska', avi: 'Older players',
+      docx: 'Word', odt: 'OpenDocument', rtf: 'Rich text', txt: 'Plain text', md: 'Markdown', html: 'Web page', epub: 'E-book',
+      xlsx: 'Excel', ods: 'OpenDocument', csv: 'First sheet',
+      pptx: 'PowerPoint', odp: 'OpenDocument',
+    };
+    const descFor = t => (t === 'pdf' && tool.id !== 'image') ? 'Print-ready'
+      : ((t === 'png' || t === 'jpg') && (tool.id === 'pdf' || tool.id === 'presentation')) ? (tool.id === 'pdf' ? 'One per page' : 'One per slide')
+      : DESC[t] || label(t);
+
+    let FORMATS = {}, LABELS = {};
+    let tool = TOOLS[0];
+    const state = {};   // per converter: its own files and chosen format
+    const opt = {};     // per converter: its own options
+    TOOLS.forEach(t => {
+      state[t.id] = { files: [], target: null };
+      opt[t.id] = { quality: 90, resize: '', combine: true, resolution: '', bitrate: '192k' };
+    });
+    let downloadUrl = null, busy = false;
+
+    const $ = id => document.getElementById(id);
+    const extOf = n => (n.includes('.') ? n.split('.').pop() : '').toLowerCase();
+    const label = e => LABELS[e] || e.toUpperCase();
+    const shortLabel = e => ({ jpeg: 'JPG', htm: 'HTML', md: 'MD', txt: 'TXT', tif: 'TIFF', aif: 'AIFF' })[e] || e.toUpperCase();
+    const fmtSize = b => b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
+    const extsFor = id => Object.keys(FORMATS).filter(e => FORMATS[e].category === id);
+    const S = () => state[tool.id];
+    const uniq = a => a.filter((v, i) => a.indexOf(v) === i);
+
+    function renderTools() {
+      $('tools').innerHTML = TOOLS.map(t => {
+        const ex = uniq(extsFor(t.id).map(shortLabel)).slice(0, 5).join(' · ');
+        return `<button class="tool${t === tool ? ' active' : ''}" role="tab" aria-selected="${t === tool}" data-id="${t.id}" style="--c1:${t.c1};--c2:${t.c2}">
+          <div class="ico">${icon(t.id)}</div><strong>${t.name}</strong><small>${ex}</small></button>`;
+      }).join('');
+    }
+
+    function selectTool(id, push = true) {
+      tool = TOOLS.find(t => t.id === id) || TOOLS[0];
+      const root = document.documentElement.style;
+      root.setProperty('--accent', tool.c1); root.setProperty('--accent-2', tool.c2);
+      root.setProperty('--accent-soft', `color-mix(in srgb, ${tool.c1} 10%, #fff)`);
+      if (push) history.replaceState(null, '', '#' + tool.id);
+      renderTools();
+      $('pIcon').innerHTML = icon(tool.id); $('dropIcon').innerHTML = icon(tool.id);
+      $('pTitle').textContent = tool.title; $('pDesc').textContent = tool.desc;
+      const exts = extsFor(tool.id);
+      $('fileInput').accept = exts.map(e => '.' + e).join(',');
+      $('accepts').textContent = 'Accepts ' + uniq(exts.map(shortLabel)).join(', ');
+      $('status').className = 'status';
+      render();
+    }
+
+    function addFiles(list) {
+      const s = S(), rejected = [];
+      $('status').className = 'status';
+      for (const f of list) {
+        const info = FORMATS[extOf(f.name)];
+        if (!info || info.category !== tool.id) { rejected.push(f.name); continue; }
+        if (s.files.length >= MAX_FILES) { render(); status(`You can convert up to ${MAX_FILES} files at once.`, 'error'); return; }
+        s.files.push(f);
+      }
+      render();
+      if (rejected.length) {
+        const other = rejected.map(n => FORMATS[extOf(n)]).find(Boolean);
+        const hint = other ? ` Try the ${TOOLS.find(t => t.id === other.category).name} converter.` : '';
+        const many = rejected.length > 1;
+        const kind = tool.name.toLowerCase(), art = many ? '' : (/^[aeiou]/.test(kind) ? 'an ' : 'a ');
+        status(`${rejected.join(', ')} ${many ? "aren't" : "isn't"} ${art}${kind} file${many ? 's' : ''}.${hint}`, 'error');
+      }
+    }
+
+    // Every target any file could reach is shown; ones not valid for all files are greyed out.
+    function targetsFor(files) {
+      const sources = files.length ? uniq(files.map(f => extOf(f.name))) : extsFor(tool.id);
+      const all = [];
+      sources.forEach(e => FORMATS[e].targets.forEach(t => { if (!all.includes(t)) all.push(t); }));
+      const ok = new Set(files.length ? all.filter(t => sources.every(e => FORMATS[e].targets.includes(t))) : all);
+      return { all, ok };
+    }
+
+    function render() {
+      const s = S();
+      clearResult();
+      $('drop').classList.toggle('compact', s.files.length > 0);
+      $('dropTitle').textContent = s.files.length ? 'Add more files' : `Drop ${tool.name.toLowerCase()} files here`;
+
+      $('files').innerHTML = s.files.map((f, i) => `<div class="file"><span class="badge">${shortLabel(extOf(f.name))}</span>
+        <span class="name"></span><span class="size">${fmtSize(f.size)}</span><button class="x" data-i="${i}" title="Remove">×</button></div>`).join('');
+      // File names go in with textContent so an odd name can't inject HTML.
+      [...$('files').querySelectorAll('.name')].forEach((el, i) => { el.textContent = s.files[i].name; el.title = s.files[i].name; });
+
+      const { all, ok } = targetsFor(s.files);
+      if (s.target && !ok.has(s.target)) s.target = null;
+      const btn = t => `<button class="fmt${t === s.target ? ' active' : ''}" data-t="${t}" ${ok.has(t) ? '' : 'disabled title="Not available for every file you added"'}><b>${shortLabel(t)}</b><span>${descFor(t)}</span></button>`;
+      const groups = tool.id === 'video'
+        ? [['Video formats', all.filter(t => !AUDIO_TARGETS.has(t))], ['Extract audio only', all.filter(t => AUDIO_TARGETS.has(t))]]
+        : [[null, all]];
+      $('targets').innerHTML = groups.filter(g => g[1].length).map(([name, list]) =>
+        (name ? `<div class="group">${name}</div>` : '') + `<div class="formats">${list.map(btn).join('')}</div>`).join('');
+
+      renderOptions();
+      const go = $('go');
+      go.disabled = busy || !s.files.length || !s.target;
+      go.innerHTML = busy ? 'Converting…' : !s.files.length ? 'Add files to start' : !s.target ? 'Pick a format'
+        : `Convert ${s.files.length > 1 ? s.files.length + ' files ' : ''}to ${shortLabel(s.target)} <svg class="i" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>`;
+    }
+
+    const select = (k, cur, items) => `<select data-k="${k}">${items.map(([v, l]) => `<option value="${v}"${v === cur ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
+    function renderOptions() {
+      const s = S(), o = opt[tool.id], t = s.target;
+      const show = {
+        quality: !t || ['jpg', 'webp', 'avif'].includes(t),
+        resize: true,
+        combine: t === 'pdf' && s.files.length > 1,
+        resolution: !t || (!AUDIO_TARGETS.has(t) && t !== 'gif'),
+        bitrate: tool.id === 'audio' ? !LOSSLESS.has(t) : (AUDIO_TARGETS.has(t) && !LOSSLESS.has(t)),
+      };
+      const rows = [];
+      for (const k of tool.options) {
+        if (!show[k]) continue;
+        if (k === 'quality') rows.push(`<div class="opt"><label>Quality</label><div class="range"><input type="range" min="40" max="100" value="${o.quality}" data-k="quality"><output>${o.quality}</output></div></div><div class="hint">Lower quality makes smaller JPG, WebP and AVIF files.</div>`);
+        if (k === 'resize') rows.push(`<div class="opt"><label>Resize</label>${select('resize', o.resize, [['', 'Keep original size'], ['3840', 'Fit within 3840 px (4K)'], ['1920', 'Fit within 1920 px'], ['1280', 'Fit within 1280 px'], ['800', 'Fit within 800 px'], ['256', 'Fit within 256 px (icon)']])}</div>`);
+        if (k === 'combine') rows.push(`<div class="opt"><label>Combine</label><label class="toggle"><input type="checkbox" data-k="combine"${o.combine ? ' checked' : ''}> Put all images into one PDF</label></div>`);
+        if (k === 'resolution') rows.push(`<div class="opt"><label>Resolution</label>${select('resolution', o.resolution, [['', 'Keep original'], ['2160', 'Up to 4K (2160p)'], ['1080', 'Up to 1080p'], ['720', 'Up to 720p'], ['480', 'Up to 480p']])}</div>`);
+        if (k === 'bitrate') rows.push(`<div class="opt"><label>Audio quality</label>${select('bitrate', o.bitrate, [['128k', '128 kbps (smaller file)'], ['192k', '192 kbps (standard)'], ['256k', '256 kbps (high)'], ['320k', '320 kbps (best)']])}</div>`);
+      }
+      $('opts').innerHTML = rows.length ? `<div class="opts">${rows.join('')}</div>`
+        : `<p class="no-opts">${tool.options.length ? 'No extra options for this format.' : 'No options needed. Layout and formatting are kept as closely as possible.'}</p>`;
+    }
+
+    function status(msg, kind = 'work', progress = null) {
+      const el = $('status');
+      el.className = 'status show ' + kind;
+      el.textContent = msg;
+      if (progress !== null) {
+        const bar = document.createElement('div');
+        bar.className = 'bar' + (progress < 0 ? ' spin' : '');
+        bar.innerHTML = `<div style="width:${Math.max(0, progress)}%"></div>`;
+        el.appendChild(bar);
+      }
+    }
+    function clearResult() {
+      $('done').classList.remove('show');
+      if (downloadUrl) { URL.revokeObjectURL(downloadUrl); downloadUrl = null; }
+    }
+    function filenameFrom(xhr, fallback) {
+      const cd = xhr.getResponseHeader('Content-Disposition') || '';
+      const star = cd.match(/filename\*=UTF-8''([^;]+)/i);
+      if (star) return decodeURIComponent(star[1]);
+      const plain = cd.match(/filename="?([^";]+)"?/i);
+      return plain ? plain[1] : fallback;
+    }
+
+    function convert() {
+      const s = S(), o = opt[tool.id], target = s.target, t = tool;
+      if (!target || !s.files.length || busy) return;
+      const form = new FormData();
+      s.files.forEach(f => form.append('files', f, f.name));
+      form.append('category', t.id);
+      form.append('target', target);
+      form.append('quality', o.quality);
+      form.append('max_size', o.resize);
+      form.append('max_height', o.resolution);
+      form.append('audio_bitrate', o.bitrate);
+      form.append('combine_pdf', o.combine ? 'true' : 'false');
+
+      busy = true; render();
+      const working = `Converting to ${shortLabel(target)}…${t.id === 'video' ? ' Videos can take a few minutes.' : ''}`;
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/convert');
+      xhr.responseType = 'blob';
+      xhr.upload.onprogress = e => {
+        if (!e.lengthComputable) return;
+        const pct = Math.round(e.loaded / e.total * 100);
+        pct < 100 ? status(`Uploading… ${pct}%`, 'work', pct) : status(working, 'work', -1);
+      };
+      xhr.upload.onload = () => status(working, 'work', -1);
+      xhr.onload = async () => {
+        busy = false; render();
+        if (xhr.status !== 200) {
+          let msg = `Conversion failed (HTTP ${xhr.status}).`;
+          try { msg = JSON.parse(await xhr.response.text()).error || msg; } catch (_) {}
+          status(msg, 'error'); return;
+        }
+        $('status').className = 'status';
+        const name = filenameFrom(xhr, `converted.${target}`);
+        downloadUrl = URL.createObjectURL(xhr.response);
+        $('doneName').textContent = name;
+        $('doneMeta').textContent = `${fmtSize(xhr.response.size)} · your download has started`;
+        const a = $('doneLink'); a.href = downloadUrl; a.download = name;
+        $('done').classList.add('show');
+        a.click();
+      };
+      xhr.onerror = () => { busy = false; render(); status('Network error. Check your connection and try again.', 'error'); };
+      status('Uploading… 0%', 'work', 0);
+      xhr.send(form);
+    }
+
+    // ---------- Events ----------
+    $('tools').addEventListener('click', e => { const b = e.target.closest('.tool'); if (b && !busy) selectTool(b.dataset.id); });
+    const drop = $('drop');
+    drop.addEventListener('click', e => { if (e.target.id !== 'fileInput') $('fileInput').click(); });
+    drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('fileInput').click(); } });
+    $('chooseBtn').addEventListener('click', e => { e.stopPropagation(); $('fileInput').click(); });
+    $('fileInput').addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
+    ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+    ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+    drop.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+    window.addEventListener('dragover', e => e.preventDefault());
+    window.addEventListener('drop', e => e.preventDefault());
+    $('files').addEventListener('click', e => { const b = e.target.closest('.x'); if (b && !busy) { S().files.splice(+b.dataset.i, 1); $('status').className = 'status'; render(); } });
+    $('targets').addEventListener('click', e => { const b = e.target.closest('.fmt'); if (b && !b.disabled && !busy) { S().target = b.dataset.t; render(); } });
+    $('opts').addEventListener('input', e => {
+      const k = e.target.dataset.k; if (!k) return;
+      opt[tool.id][k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+      if (k === 'quality') e.target.nextElementSibling.textContent = e.target.value;
+    });
+    $('go').addEventListener('click', convert);
+    window.addEventListener('hashchange', () => { if (!busy) selectTool(location.hash.slice(1), false); });
+
+    fetch('/api/formats').then(r => r.json()).then(d => {
+      FORMATS = Object.fromEntries(Object.entries(d.formats).filter(([, v]) => v.available)); LABELS = d.labels;
+      selectTool(location.hash.slice(1) || 'image', false);
+    }).catch(() => status('Could not reach the server.', 'error'));
+  </script>
+</body>
+</html>
