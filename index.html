@@ -41,7 +41,7 @@
     .wrap { max-width: 1120px; margin: -88px auto 0; padding: 0 20px 60px; position: relative; z-index: 2; }
 
     /* ---------- Converter picker ---------- */
-    .tools { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px; }
+    .tools { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 10px; }
     .tool { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px 14px 14px; text-align: left; cursor: pointer; color: var(--ink);
       box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 8px 24px rgba(15,23,42,.06); transition: transform .18s, box-shadow .18s, border-color .18s; }
     .tool:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(15,23,42,.12); }
@@ -146,7 +146,7 @@
     .footer { text-align: center; color: #94a3b8; font-size: 12px; margin-top: 26px; }
 
     @media (max-width: 1000px) {
-      .tools { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .tools { grid-template-columns: repeat(5, minmax(0, 1fr)); }
     }
     @media (max-width: 760px) {
       .hero { padding: 0 16px 104px; }
@@ -174,7 +174,7 @@
     </nav>
     <div class="hero-text">
       <h1>Convert any file, <span>in seconds</span></h1>
-      <p>Images, audio, video, documents, spreadsheets, slides and PDFs. Pick a converter, drop your files, choose a format.</p>
+      <p>Images, audio, video, documents, spreadsheets, slides, PDFs, data files and archives. Pick a converter, drop your files, choose a format.</p>
     </div>
   </header>
 
@@ -220,7 +220,7 @@
       <div class="feature"><div class="fi">🎯</div><div><b>Only valid formats</b><p>Each converter shows just the formats your files can actually become.</p></div></div>
       <div class="feature"><div class="fi">🔒</div><div><b>Private by default</b><p>Uploads are deleted from the server as soon as your download is sent.</p></div></div>
     </div>
-    <p class="footer">Powered by ffmpeg, LibreOffice, pandoc, Pillow and PyMuPDF.</p>
+    <p class="footer">Powered by ffmpeg, LibreOffice, pandoc, Pillow, PyMuPDF, openpyxl and py7zr.</p>
   </main>
 
   <script>
@@ -232,6 +232,8 @@
       spreadsheet: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/>',
       presentation: '<path d="M2 3h20"/><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"/><path d="m7 21 5-5 5 5"/>',
       pdf: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 18v-5h1.5a1.5 1.5 0 0 1 0 3H8"/><path d="M14 13v5"/><path d="M14 13h2.5"/>',
+      data: '<path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5a2 2 0 0 0 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5a2 2 0 0 1 2-2 2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/>',
+      archive: '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
     };
     const icon = k => `<svg class="i" viewBox="0 0 24 24">${SVG[k]}</svg>`;
 
@@ -244,6 +246,10 @@
       { id: 'spreadsheet', name: 'Spreadsheet', title: 'Spreadsheet converter', desc: 'Excel, OpenDocument and CSV, including spreadsheet to PDF.', c1: '#10b981', c2: '#0ea5e9', options: [] },
       { id: 'presentation', name: 'Slides', title: 'Slides converter', desc: 'PowerPoint and OpenDocument slides to PDF or one image per slide.', c1: '#f97316', c2: '#eab308', options: [] },
       { id: 'pdf', name: 'PDF', title: 'PDF converter', desc: 'Turn PDFs into editable Word files, plain text or page images.', c1: '#e11d48', c2: '#7c3aed', options: [] },
+      { id: 'data', name: 'Data', title: 'Data converter', desc: 'CSV, JSON, XML, YAML and Excel to each other, plus Markdown to HTML or PDF.', c1: '#14b8a6', c2: '#6366f1', options: [],
+        note: 'No options needed. Nested data becomes dotted columns (like address.city) in CSV and Excel, and each Excel sheet becomes its own CSV.' },
+      { id: 'archive', name: 'Archive', title: 'Archive converter', desc: 'Repack ZIP, TAR, TAR.GZ and 7z archives into any of the others.', c1: '#78716c', c2: '#0ea5e9', options: [],
+        note: 'No options needed. Folders, file names and dates are kept. Links and password-protected archives are not supported.' },
     ];
     const AUDIO_TARGETS = new Set(['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac', 'opus']);
     const LOSSLESS = new Set(['wav', 'flac']);
@@ -255,12 +261,15 @@
       docx: 'Word', odt: 'OpenDocument', rtf: 'Rich text', txt: 'Plain text', md: 'Markdown', html: 'Web page', epub: 'E-book',
       xlsx: 'Excel', ods: 'OpenDocument', csv: 'First sheet',
       pptx: 'PowerPoint', odp: 'OpenDocument',
+      json: 'For APIs and apps', xml: 'Structured markup', yaml: 'Config files',
+      zip: 'Opens everywhere', tar: 'No compression', 'tar.gz': 'Compressed TAR', '7z': 'Smallest size',
     };
     const descFor = t => (t === 'pdf' && tool.id !== 'image') ? 'Print-ready'
+      : (tool.id === 'data' && t === 'csv') ? 'One per sheet'
       : ((t === 'png' || t === 'jpg') && (tool.id === 'pdf' || tool.id === 'presentation')) ? (tool.id === 'pdf' ? 'One per page' : 'One per slide')
       : DESC[t] || label(t);
 
-    let FORMATS = {}, LABELS = {};
+    let CATS = {}, LABELS = {};  // CATS[converter][ext] = { targets }
     let tool = TOOLS[0];
     const state = {};   // per converter: its own files and chosen format
     const opt = {};     // per converter: its own options
@@ -271,11 +280,12 @@
     let downloadUrl = null, busy = false;
 
     const $ = id => document.getElementById(id);
-    const extOf = n => (n.includes('.') ? n.split('.').pop() : '').toLowerCase();
+    const extOf = n => { n = n.toLowerCase(); return n.endsWith('.tar.gz') ? 'tar.gz' : (n.includes('.') ? n.split('.').pop() : ''); };
     const label = e => LABELS[e] || e.toUpperCase();
-    const shortLabel = e => ({ jpeg: 'JPG', htm: 'HTML', md: 'MD', txt: 'TXT', tif: 'TIFF', aif: 'AIFF' })[e] || e.toUpperCase();
+    const shortLabel = e => ({ jpeg: 'JPG', htm: 'HTML', md: 'MD', txt: 'TXT', tif: 'TIFF', aif: 'AIFF', yml: 'YAML', tgz: 'TAR.GZ' })[e] || e.toUpperCase();
     const fmtSize = b => b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
-    const extsFor = id => Object.keys(FORMATS).filter(e => FORMATS[e].category === id);
+    const extsFor = id => Object.keys(CATS[id] || {});
+    const infoFor = e => (CATS[tool.id] || {})[e];
     const S = () => state[tool.id];
     const uniq = a => a.filter((v, i) => a.indexOf(v) === i);
 
@@ -307,15 +317,14 @@
       const s = S(), rejected = [];
       $('status').className = 'status';
       for (const f of list) {
-        const info = FORMATS[extOf(f.name)];
-        if (!info || info.category !== tool.id) { rejected.push(f.name); continue; }
+        if (!infoFor(extOf(f.name))) { rejected.push(f.name); continue; }
         if (s.files.length >= MAX_FILES) { render(); status(`You can convert up to ${MAX_FILES} files at once.`, 'error'); return; }
         s.files.push(f);
       }
       render();
       if (rejected.length) {
-        const other = rejected.map(n => FORMATS[extOf(n)]).find(Boolean);
-        const hint = other ? ` Try the ${TOOLS.find(t => t.id === other.category).name} converter.` : '';
+        const others = rejected.map(n => TOOLS.filter(t => (CATS[t.id] || {})[extOf(n)])).find(l => l.length);
+        const hint = others ? ` Try the ${others.map(t => t.name).join(' or ')} converter.` : '';
         const many = rejected.length > 1;
         const kind = tool.name.toLowerCase(), art = many ? '' : (/^[aeiou]/.test(kind) ? 'an ' : 'a ');
         status(`${rejected.join(', ')} ${many ? "aren't" : "isn't"} ${art}${kind} file${many ? 's' : ''}.${hint}`, 'error');
@@ -326,8 +335,8 @@
     function targetsFor(files) {
       const sources = files.length ? uniq(files.map(f => extOf(f.name))) : extsFor(tool.id);
       const all = [];
-      sources.forEach(e => FORMATS[e].targets.forEach(t => { if (!all.includes(t)) all.push(t); }));
-      const ok = new Set(files.length ? all.filter(t => sources.every(e => FORMATS[e].targets.includes(t))) : all);
+      sources.forEach(e => infoFor(e).targets.forEach(t => { if (!all.includes(t)) all.push(t); }));
+      const ok = new Set(files.length ? all.filter(t => sources.every(e => infoFor(e).targets.includes(t))) : all);
       return { all, ok };
     }
 
@@ -378,7 +387,7 @@
         if (k === 'bitrate') rows.push(`<div class="opt"><label>Audio quality</label>${select('bitrate', o.bitrate, [['128k', '128 kbps (smaller file)'], ['192k', '192 kbps (standard)'], ['256k', '256 kbps (high)'], ['320k', '320 kbps (best)']])}</div>`);
       }
       $('opts').innerHTML = rows.length ? `<div class="opts">${rows.join('')}</div>`
-        : `<p class="no-opts">${tool.options.length ? 'No extra options for this format.' : 'No options needed. Layout and formatting are kept as closely as possible.'}</p>`;
+        : `<p class="no-opts">${tool.options.length ? 'No extra options for this format.' : (tool.note || 'No options needed. Layout and formatting are kept as closely as possible.')}</p>`;
     }
 
     function status(msg, kind = 'work', progress = null) {
@@ -472,7 +481,8 @@
     window.addEventListener('hashchange', () => { if (!busy) selectTool(location.hash.slice(1), false); });
 
     fetch('/api/formats').then(r => r.json()).then(d => {
-      FORMATS = Object.fromEntries(Object.entries(d.formats).filter(([, v]) => v.available)); LABELS = d.labels;
+      for (const [cat, exts] of Object.entries(d.categories)) CATS[cat] = Object.fromEntries(Object.entries(exts).filter(([, v]) => v.available));
+      LABELS = d.labels;
       selectTool(location.hash.slice(1) || 'image', false);
     }).catch(() => status('Could not reach the server.', 'error'));
   </script>
